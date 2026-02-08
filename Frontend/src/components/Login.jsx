@@ -34,7 +34,7 @@ function Login({ onLoginSuccess }) {
       const user = await login(formData);
       if (!user) throw new Error("Invalid email or password");
       onLoginSuccess(user);
-      navigate("/dashboard"); // ✅ redirect after login
+      navigate("/dashboard"); 
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {

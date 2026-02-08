@@ -16,14 +16,12 @@ public class UsersController {
 
     private final UserService userService;
 
-    // ✅ Constructor Injection (BEST PRACTICE)
     public UsersController(UserService userService) {
         this.userService = userService;
     }
 
-    // -------------------------------
+
     // SIGNUP
-    // -------------------------------
     @PostMapping("/addUser")
     public ResponseEntity<?> addUser(@RequestBody Users user) {
         Users savedUser = userService.addUser(user);
@@ -31,9 +29,7 @@ public class UsersController {
         return ResponseEntity.ok(savedUser);
     }
 
-    // -------------------------------
     // LOGIN
-    // -------------------------------
     @PostMapping("/loginUser")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
         Optional<Users> userOpt = userService.loginUser(loginRequest);
@@ -50,18 +46,14 @@ public class UsersController {
         return ResponseEntity.ok(user);
     }
 
-    // -------------------------------
     // FORGOT PASSWORD
-    // -------------------------------
     @PostMapping("/forgotPassword")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> body) {
         String response = userService.forgotPassword(body.get("email"));
         return ResponseEntity.ok(response);
     }
 
-    // -------------------------------
     // RESET PASSWORD
-    // -------------------------------
     @PostMapping("/resetPassword")
     public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body) {
         String response = userService.resetPassword(

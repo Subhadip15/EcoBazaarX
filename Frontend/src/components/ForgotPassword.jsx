@@ -5,7 +5,7 @@ import "../styles/ForgotPassword.css";
 function ForgotPassword() {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1); // 1: email, 2: OTP
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");

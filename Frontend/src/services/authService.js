@@ -1,6 +1,6 @@
-const API_URL = "http://localhost:8080/user"; // ✅ correct base URL
+const API_URL = "http://localhost:8080/user";
 
-// ------------------- SIGNUP -------------------
+// ------------------- SIGNUP
 export const signup = async (userData) => {
   const response = await fetch(`${API_URL}/addUser`, {
     method: "POST",
@@ -21,7 +21,7 @@ export const signup = async (userData) => {
   return { name, email, phone };
 };
 
-// ------------------- LOGIN -------------------
+// ------------------- LOGIN
 export const login = async (credentials) => {
   const response = await fetch(`${API_URL}/loginUser`, {
     method: "POST",
@@ -46,18 +46,18 @@ export const login = async (credentials) => {
   return { name, email, phone };
 };
 
-// ------------------- LOGOUT -------------------
+// ------------------- LOGOUT 
 export const logout = () => {
   localStorage.removeItem("user");
 };
 
-// ------------------- GET STORED USER -------------------
+// ------------------- GET STORED USER 
 export const getStoredUser = () => {
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 };
 
-// ------------------- AUTH CHECK -------------------
+// ------------------- AUTH CHECK 
 export const isAuthenticated = () => {
   return Boolean(localStorage.getItem("user"));
 };

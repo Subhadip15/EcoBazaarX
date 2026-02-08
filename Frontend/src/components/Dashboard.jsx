@@ -11,7 +11,7 @@ function Dashboard({ onLogout }) {
   const handleLogout = () => {
     logout();
     onLogout();
-    navigate("/login"); // ✅ redirect after logout
+    navigate("/login"); //redirect after logout
   };
 
   if (!user) return <div className="loading">Loading...</div>;
@@ -47,7 +47,7 @@ function Dashboard({ onLogout }) {
 
       {/* Dashboard Content */}
       <div className="dashboard-container">
-        <h2>Hello 👋</h2>
+        <h2>Hello</h2>
       </div>
     </>
   );
