@@ -28,7 +28,7 @@
 
 /* Inputs */
 .signup-card input {
-  width: 100%;
+  width: 92%;
   padding: 12px 14px;
   margin-bottom: 14px;
   border-radius: 8px;
@@ -47,7 +47,7 @@
 .signup-card button {
   width: 100%;
   padding: 12px;
-  background: #16a34a;
+  background: #71dd12;
   color: white;
   border: none;
   border-radius: 8px;

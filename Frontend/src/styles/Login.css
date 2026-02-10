@@ -4,7 +4,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #bbbcc4, #764ba2);
   padding: 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -28,7 +28,7 @@
 
 /* Inputs */
 .login-card input {
-  width: 100%;
+  width: 92%;
   padding: 12px 14px;
   margin-bottom: 14px;
   border-radius: 8px;
@@ -47,7 +47,7 @@
 .login-card button {
   width: 100%;
   padding: 12px;
-  background: #4f46e5;
+  background: #8f1bd2;
   color: #ffffff;
   border: none;
   border-radius: 8px;

@@ -11,7 +11,7 @@ function Dashboard({ onLogout }) {
   const handleLogout = () => {
     logout();
     onLogout();
-    navigate("/login"); //redirect after logout
+    navigate("/login");
   };
 
   if (!user) return <div className="loading">Loading...</div>;
@@ -45,9 +45,19 @@ function Dashboard({ onLogout }) {
         </div>
       </nav>
 
-      {/* Dashboard Content */}
+      {/* Dashboard Content with Background Image Link */}
       <div className="dashboard-container">
-        <h2>Hello</h2>
+        <a 
+          href="https://ecobazar-ecommerce.vercel.app/_next/image?url=%2Fimages%2FBannar.png&w=3840&q=75" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="background-link"
+        >
+          <div className="background-image"></div>
+        </a>
+        <div className="content-overlay">
+          <h2>Welcome to EcoBazar!</h2>
+        </div>
       </div>
     </>
   );
