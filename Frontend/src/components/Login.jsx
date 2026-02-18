@@ -31,9 +31,10 @@ function Login({ onLoginSuccess }) {
 
     setLoading(true);
     try {
-      const user = await login(formData);
-      if (!user) throw new Error("Invalid email or password");
-      onLoginSuccess(user);
+      const { token, user } = await login(formData); // updated destructuring
+      if (!token || !user) throw new Error("Invalid email or password");
+      
+      onLoginSuccess(user); // pass user only, keep your existing logic
       navigate("/dashboard"); 
     } catch (err) {
       setError(err.message || "Login failed");

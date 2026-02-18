@@ -1,5 +1,6 @@
 package com.SignupForm.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,11 +15,12 @@ public class Users {
 
     public Users() {}
 
-    public Users(String name, String email, String password, String phone) {
+    public Users(String name, String email, String password, String phone, Role role) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.phone = phone;
+        this.role = role;
     }
 
     @Id
@@ -31,15 +33,20 @@ public class Users {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @JsonIgnore
+    @Column(nullable = false, length = 60)
     private String password;
 
     @Column(nullable = false)
     private String phone;
 
-    // ✅ OTP fields (REQUIRED)
-    @Column(length = 6)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    @JsonIgnore
     private String otp;
 
+    @JsonIgnore
     private LocalDateTime otpExpiry;
 }

@@ -5,59 +5,65 @@ export const signup = async (userData) => {
   const response = await fetch(`${API_URL}/addUser`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    
     body: JSON.stringify(userData),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Signup failed");
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Signup failed");
   }
 
   const data = await response.json();
+  const { token, user } = data;
 
-  const { name, email, phone } = data;
-  localStorage.setItem("user", JSON.stringify({ name, email, phone }));
+  if (!token || !user) throw new Error("Signup failed");
 
-  return { name, email, phone };
+  // Store JWT token and user info in localStorage
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
+
+  return { token, user };
 };
 
 // ------------------- LOGIN
 export const login = async (credentials) => {
-  const response = await fetch(`${API_URL}/loginUser`, {
+  const response = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(credentials),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Invalid email or password");
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Invalid email or password");
   }
 
-  const user = await response.json();
+  const data = await response.json();
+  const { token, user } = data;
 
-  if (!user) {
-    throw new Error("Login failed");
-  }
+  if (!token || !user) throw new Error("Login failed");
 
-  const { name, email, phone } = user;
-  localStorage.setItem("user", JSON.stringify({ name, email, phone }));
+  // Store JWT token and user info in localStorage
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
 
-  return { name, email, phone };
+  return { token, user };
 };
 
-// ------------------- LOGOUT 
+// ------------------- LOGOUT
 export const logout = () => {
   localStorage.removeItem("user");
+  localStorage.removeItem("token");
 };
 
-// ------------------- GET STORED USER 
+// ------------------- GET STORED USER
 export const getStoredUser = () => {
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 };
 
-// ------------------- AUTH CHECK 
+// ------------------- AUTH CHECK
 export const isAuthenticated = () => {
-  return Boolean(localStorage.getItem("user"));
+  return Boolean(localStorage.getItem("token"));
 };

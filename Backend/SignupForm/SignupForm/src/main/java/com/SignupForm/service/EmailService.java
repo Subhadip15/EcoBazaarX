@@ -18,10 +18,8 @@ public class EmailService {
         message.setTo(toEmail);
         message.setSubject("Password Reset OTP");
         message.setText(
-
-                "EcoBazar" +
-                "\n\nYour OTP for password reset is: " + otp +
-                        "\n\nThis OTP is valid for 5 minutes."
+                "EcoBazar\n\nYour OTP is: " + otp +
+                        "\nValid for 5 minutes."
         );
 
         mailSender.send(message);
