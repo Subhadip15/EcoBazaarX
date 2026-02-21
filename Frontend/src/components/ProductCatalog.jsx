@@ -6,6 +6,7 @@ import {
   getProducts,
   updateProduct
 } from "../services/productService";
+import { uploadProductImage } from "../services/cloudinaryService";
 import "../styles/ProductCatalog.css";
 
 const CARBON_FILTERS = ["all", "low", "medium", "high"];
@@ -104,6 +105,8 @@ function ProductCatalog() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -156,6 +159,7 @@ function ProductCatalog() {
     setEditingId(null);
     setFormError("");
     setCarbonPreview(null);
+    setSelectedImageFile(null);
   };
 
   const onChange = (event) => {
@@ -169,6 +173,30 @@ function ProductCatalog() {
   const runAutoPreview = () => {
     const preview = calculateAutoCarbon(form);
     setCarbonPreview(preview);
+  };
+
+  const onImageFileChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedImageFile(file);
+  };
+
+  const onUploadImage = async () => {
+    if (!selectedImageFile) {
+      setFormError("Please choose an image file first.");
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      setFormError("");
+      const imageUrl = await uploadProductImage(selectedImageFile);
+      setForm((prev) => ({ ...prev, image: imageUrl }));
+      setSelectedImageFile(null);
+    } catch (error) {
+      setFormError(error.message || "Failed to upload image.");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const onSubmit = async (event) => {
@@ -239,6 +267,9 @@ function ProductCatalog() {
   };
 
   const onEdit = (product) => {
+    const carbonData = product?.carbonData || {};
+    const carbonMethod = carbonData.method === "auto" ? "auto" : "manual";
+
     setEditingId(product.id);
     setForm({
       id: product.id,
@@ -249,12 +280,12 @@ function ProductCatalog() {
       image: product.image,
       description: product.description,
       isEcoFriendly: product.isEcoFriendly,
-      carbonMethod: product.carbonData.method,
+      carbonMethod,
       manualCO2e:
-        product.carbonData.method === "manual"
-          ? String(product.carbonData.totalCO2ePerKg)
+        carbonMethod === "manual"
+          ? String(carbonData.totalCO2ePerKg || "")
           : "",
-      material: product.carbonData.material || "mixed",
+      material: carbonData.material || "mixed",
       weightKg: "1",
       transportKm: "120",
       packagingType: "recyclable"
@@ -349,6 +380,17 @@ function ProductCatalog() {
                 placeholder="https://..."
               />
             </label>
+            <div className="actions-row">
+              <input type="file" accept="image/*" onChange={onImageFileChange} />
+              <button
+                type="button"
+                className="ghost-btn"
+                disabled={uploadingImage}
+                onClick={onUploadImage}
+              >
+                {uploadingImage ? "Uploading..." : "Upload via Cloudinary"}
+              </button>
+            </div>
 
             <label>
               Description
