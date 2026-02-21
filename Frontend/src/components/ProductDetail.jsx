@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getProductById } from "../services/productService";
 import "../styles/ProductDetail.css";
@@ -13,18 +13,55 @@ function getEcoTone(total) {
 
 function ProductDetail() {
   const { productId } = useParams();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const product = useMemo(
-    () => getProductById(productId),
-    [productId]
-  );
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProduct = async () => {
+      try {
+        const data = await getProductById(productId);
+        if (isMounted) {
+          setProduct(data);
+          setError("");
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || "Failed to load product.");
+          setProduct(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProduct();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [productId]);
+
+  if (loading) {
+    return (
+      <main className="detail-page">
+        <div className="detail-shell">
+          <h2>Loading product...</h2>
+        </div>
+      </main>
+    );
+  }
 
   if (!product) {
     return (
       <main className="detail-page">
         <div className="detail-shell">
           <h2>Product not found</h2>
-          <p>This item may have been removed or not yet synced.</p>
+          {error ? <p>{error}</p> : <p>This item may have been removed.</p>}
           <Link to="/products" className="back-btn">
             Return to catalog
           </Link>
@@ -33,10 +70,14 @@ function ProductDetail() {
     );
   }
 
-  const total = product.carbonData.totalCO2ePerKg;
+  const total = Number(product?.carbonData?.totalCO2ePerKg || 0);
   const ecoTone = getEcoTone(total);
-  const { manufacturing, packaging, transport, handling } =
-    product.carbonData.breakdown;
+  const {
+    manufacturing = 0,
+    packaging = 0,
+    transport = 0,
+    handling = 0
+  } = product?.carbonData?.breakdown || {};
 
   return (
     <main className="detail-page">
@@ -58,7 +99,7 @@ function ProductDetail() {
             </p>
             <p className="description">{product.description}</p>
 
-            <div className="price-line">${product.price.toFixed(2)}</div>
+            <div className="price-line">${Number(product.price || 0).toFixed(2)}</div>
 
             <div className="impact-breakdown">
               <h2>Carbon Impact Breakdown</h2>

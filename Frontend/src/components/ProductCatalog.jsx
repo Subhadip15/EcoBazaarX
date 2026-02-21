@@ -1,6 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getProducts, saveProducts } from "../services/productService";
+import {
+  createProduct,
+  deleteProduct,
+  getProducts,
+  updateProduct
+} from "../services/productService";
 import "../styles/ProductCatalog.css";
 
 const CARBON_FILTERS = ["all", "low", "medium", "high"];
@@ -87,26 +92,59 @@ function getInitialForm() {
 
 function ProductCatalog() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState(getProducts());
+  const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [ecoOnly, setEcoOnly] = useState(false);
   const [carbonFilter, setCarbonFilter] = useState("all");
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(getInitialForm());
-  const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [apiError, setApiError] = useState("");
   const [carbonPreview, setCarbonPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProducts = async () => {
+      try {
+        const data = await getProducts();
+        if (isMounted) {
+          setProducts(data);
+          setApiError("");
+        }
+      } catch (error) {
+        if (isMounted) {
+          setApiError(error.message || "Failed to load products.");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const query = search.trim().toLowerCase();
       const inSearch =
         query.length === 0 ||
-        product.name.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query) ||
-        product.seller.toLowerCase().includes(query);
+        (product.name || "").toLowerCase().includes(query) ||
+        (product.category || "").toLowerCase().includes(query) ||
+        (product.seller || "").toLowerCase().includes(query);
 
       const ecoMatch = ecoOnly ? product.isEcoFriendly : true;
-      const bucket = getCarbonBucket(product.carbonData.totalCO2ePerKg);
+      const totalCO2ePerKg = Number(product?.carbonData?.totalCO2ePerKg || 0);
+      const bucket = getCarbonBucket(totalCO2ePerKg);
       const carbonMatch = carbonFilter === "all" ? true : bucket === carbonFilter;
 
       return inSearch && ecoMatch && carbonMatch;
@@ -116,7 +154,7 @@ function ProductCatalog() {
   const resetForm = () => {
     setForm(getInitialForm());
     setEditingId(null);
-    setError("");
+    setFormError("");
     setCarbonPreview(null);
   };
 
@@ -133,11 +171,11 @@ function ProductCatalog() {
     setCarbonPreview(preview);
   };
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
 
     if (!form.name || !form.category || !form.seller || !form.price) {
-      setError("Name, category, seller, and price are required.");
+      setFormError("Name, category, seller, and price are required.");
       return;
     }
 
@@ -145,7 +183,7 @@ function ProductCatalog() {
     if (form.carbonMethod === "manual") {
       const manual = Number(form.manualCO2e);
       if (!manual || manual <= 0) {
-        setError("Please enter a valid manual CO2e/kg value.");
+        setFormError("Please enter a valid manual CO2e/kg value.");
         return;
       }
       carbonData = {
@@ -161,13 +199,12 @@ function ProductCatalog() {
         ...calculateAutoCarbon(form)
       };
       if (!carbonData.totalCO2ePerKg || carbonData.totalCO2ePerKg <= 0) {
-        setError("Auto calculation produced an invalid carbon value.");
+        setFormError("Auto calculation produced an invalid carbon value.");
         return;
       }
     }
 
     const item = {
-      id: editingId || `P-${Math.floor(Math.random() * 9000 + 1000)}`,
       name: form.name.trim(),
       category: form.category.trim(),
       seller: form.seller.trim(),
@@ -180,20 +217,25 @@ function ProductCatalog() {
       carbonData
     };
 
-    if (editingId) {
-      setProducts((prev) => {
-        const next = prev.map((p) => (p.id === editingId ? item : p));
-        saveProducts(next);
-        return next;
-      });
-    } else {
-      setProducts((prev) => {
-        const next = [item, ...prev];
-        saveProducts(next);
-        return next;
-      });
+    try {
+      setSaving(true);
+      setFormError("");
+      setApiError("");
+
+      if (editingId) {
+        const updated = await updateProduct(editingId, item);
+        setProducts((prev) => prev.map((p) => (p.id === editingId ? updated : p)));
+      } else {
+        const created = await createProduct(item);
+        setProducts((prev) => [created, ...prev]);
+      }
+
+      resetForm();
+    } catch (error) {
+      setApiError(error.message || "Failed to save product.");
+    } finally {
+      setSaving(false);
     }
-    resetForm();
   };
 
   const onEdit = (product) => {
@@ -217,18 +259,23 @@ function ProductCatalog() {
       transportKm: "120",
       packagingType: "recyclable"
     });
-    setError("");
+    setFormError("");
     setCarbonPreview(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const onDelete = (productId) => {
-    setProducts((prev) => {
-      const next = prev.filter((product) => product.id !== productId);
-      saveProducts(next);
-      return next;
-    });
-    if (editingId === productId) resetForm();
+  const onDelete = async (productId) => {
+    try {
+      setDeletingId(productId);
+      setApiError("");
+      await deleteProduct(productId);
+      setProducts((prev) => prev.filter((product) => product.id !== productId));
+      if (editingId === productId) resetForm();
+    } catch (error) {
+      setApiError(error.message || "Failed to delete product.");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -426,11 +473,16 @@ function ProductCatalog() {
               )}
             </div>
 
-            {error && <p className="error-line">{error}</p>}
+            {formError && <p className="error-line">{formError}</p>}
+            {apiError && <p className="error-line">{apiError}</p>}
 
             <div className="actions-row">
-              <button type="submit" className="primary-btn">
-                {editingId ? "Save Product" : "Add Product"}
+              <button type="submit" className="primary-btn" disabled={saving}>
+                {saving
+                  ? "Saving..."
+                  : editingId
+                    ? "Save Product"
+                    : "Add Product"}
               </button>
               {(editingId || form.name || form.category || form.seller) && (
                 <button type="button" className="ghost-btn" onClick={resetForm}>
@@ -444,7 +496,7 @@ function ProductCatalog() {
         <article className="products-panel">
           <div className="panel-top">
             <h2>Product Browse & Eco Filters</h2>
-            <p>{filteredProducts.length} items visible</p>
+            <p>{loading ? "Loading..." : `${filteredProducts.length} items visible`}</p>
           </div>
 
           <div className="filters-row">
@@ -474,8 +526,12 @@ function ProductCatalog() {
           </div>
 
           <div className="product-grid">
+            {apiError && !filteredProducts.length && (
+              <p className="error-line">{apiError}</p>
+            )}
             {filteredProducts.map((product) => {
-              const rating = getEcoRating(product.carbonData.totalCO2ePerKg);
+              const totalCO2ePerKg = Number(product?.carbonData?.totalCO2ePerKg || 0);
+              const rating = getEcoRating(totalCO2ePerKg);
               return (
                 <article key={product.id} className="product-card">
                   <img src={product.image} alt={product.name} />
@@ -490,9 +546,9 @@ function ProductCatalog() {
                     <p className="description-line">{product.description}</p>
                     <div className="stats-row">
                       <p>
-                        <strong>${product.price.toFixed(2)}</strong>
+                        <strong>${Number(product.price || 0).toFixed(2)}</strong>
                       </p>
-                      <p>{product.carbonData.totalCO2ePerKg} CO2e/kg</p>
+                      <p>{totalCO2ePerKg} CO2e/kg</p>
                     </div>
                     <div className="card-actions">
                       <Link to={`/products/${product.id}`} className="link-btn">
@@ -503,9 +559,10 @@ function ProductCatalog() {
                       </button>
                       <button
                         className="text-btn danger"
+                        disabled={deletingId === product.id}
                         onClick={() => onDelete(product.id)}
                       >
-                        Delete
+                        {deletingId === product.id ? "Deleting..." : "Delete"}
                       </button>
                     </div>
                   </div>
