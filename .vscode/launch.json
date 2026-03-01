@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SignupFormApplication<SignupForm>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.SignupForm.SignupFormApplication",
+            "projectName": "SignupForm",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
