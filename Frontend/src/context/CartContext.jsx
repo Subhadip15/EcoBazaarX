@@ -1,150 +1,144 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+// src/context/CartContext.jsx
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 
-const STORAGE_KEY = "ecobazaar_cart_v1";
+const CartContext = createContext();
 
-const CartContext = createContext(null);
+export const useCart = () => useContext(CartContext);
 
-function parseMoney(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 0;
-  return Math.round(numeric * 100) / 100;
-}
+export const CartProvider = ({ children }) => {
+  const [items, setItems] = useState([]);
+  const [cartId, setCartId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-function parseEmission(product) {
-  const emission = Number(product?.carbonData?.totalCO2ePerKg || 0);
-  return Number.isFinite(emission) ? emission : 0;
-}
+  const token = localStorage.getItem("token");
 
-function normalizeProduct(product) {
-  return {
-    productId: product.id,
-    name: product.name || "Unnamed Product",
-    category: product.category || "Uncategorized",
-    seller: product.seller || "Unknown Seller",
-    image: product.image || "https://via.placeholder.com/600x400?text=EcoBazaar",
-    description: product.description || "",
-    isEcoFriendly: Boolean(product.isEcoFriendly),
-    price: parseMoney(product.price),
-    emission: parseEmission(product)
-  };
-}
-
-function readInitialCart() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-export function CartProvider({ children }) {
-  const [items, setItems] = useState(readInitialCart);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  // ✅ Auto calculate subtotal from items
+  const subtotal = useMemo(() => {
+    return items.reduce((total, item) => {
+      return total + item.price * item.quantity;
+    }, 0);
   }, [items]);
 
-  const addToCart = (product, qty = 1) => {
-    const quantity = Number(qty);
-    if (!product || !Number.isFinite(quantity) || quantity <= 0) return;
+  // ✅ Auto calculate emission
+  const totalEmission = useMemo(() => {
+    return items.reduce((total, item) => {
+      return total + (item.emission || 0) * item.quantity;
+    }, 0);
+  }, [items]);
 
-    const normalized = normalizeProduct(product);
-    setItems(prev => {
-      const existing = prev.find(item => item.productId === normalized.productId);
-      if (existing) {
-        return prev.map(item =>
-          item.productId === normalized.productId
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, { ...normalized, quantity }];
-    });
-  };
-
-  const updateQuantity = (productId, qty) => {
-    const quantity = Number(qty);
-    if (!Number.isFinite(quantity)) return;
-    if (quantity <= 0) {
-      setItems(prev => prev.filter(item => item.productId !== productId));
+  // ================= FETCH CART =================
+  const fetchCart = async () => {
+    if (!token) {
+      setLoading(false);
       return;
     }
-    setItems(prev =>
-      prev.map(item =>
-        item.productId === productId ? { ...item, quantity } : item
-      )
-    );
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://localhost:8080/api/cart", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+
+      setItems(data.items || []);
+      setCartId(data.cartId || null);
+    } catch (err) {
+      console.error("Fetch cart error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeFromCart = productId => {
-    setItems(prev => prev.filter(item => item.productId !== productId));
+  useEffect(() => {
+    fetchCart();
+  }, [token]);
+
+  // ================= ADD ITEM =================
+  const addToCart = async (productId, quantity) => {
+    try {
+      await fetch("http://localhost:8080/api/cart/add", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+
+      fetchCart(); // refresh cart
+    } catch (err) {
+      console.error("Add to cart error:", err);
+    }
   };
 
-  const replaceCartItem = (productId, replacementProduct) => {
-    if (!replacementProduct) return;
-    const replacement = normalizeProduct(replacementProduct);
+  // ================= REMOVE ITEM =================
+  const removeFromCart = async (itemId) => {
+    try {
+      await fetch(`http://localhost:8080/api/cart/remove/${itemId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    setItems(prev => {
-      const source = prev.find(item => item.productId === productId);
-      if (!source) return prev;
-
-      const withoutSource = prev.filter(item => item.productId !== productId);
-      const target = withoutSource.find(item => item.productId === replacement.productId);
-
-      if (target) {
-        return withoutSource.map(item =>
-          item.productId === replacement.productId
-            ? { ...item, quantity: item.quantity + source.quantity }
-            : item
-        );
-      }
-
-      return [...withoutSource, { ...replacement, quantity: source.quantity }];
-    });
+      fetchCart(); // refresh cart
+    } catch (err) {
+      console.error("Remove error:", err);
+    }
   };
 
-  const clearCart = () => {
-    setItems([]);
+  // ================= UPDATE QUANTITY =================
+  const updateQuantity = async (productId, change) => {
+    try {
+      await fetch("http://localhost:8080/api/cart/update", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId,
+          quantityChange: change,
+        }),
+      });
+
+      fetchCart(); // refresh cart
+    } catch (err) {
+      console.error("Update quantity error:", err);
+    }
   };
 
-  const metrics = useMemo(() => {
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = parseMoney(
-      items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    );
-    const totalEmission = parseMoney(
-      items.reduce((sum, item) => sum + item.emission * item.quantity, 0)
-    );
-    const avgEmission = totalItems ? parseMoney(totalEmission / totalItems) : 0;
+  // ================= CLEAR CART =================
+  const clearCart = async () => {
+    try {
+      await fetch("http://localhost:8080/api/cart/clear", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    return {
-      totalItems,
-      subtotal,
-      totalEmission,
-      avgEmission
-    };
-  }, [items]);
-
-  const value = {
-    items,
-    addToCart,
-    updateQuantity,
-    removeFromCart,
-    replaceCartItem,
-    clearCart,
-    ...metrics
+      setItems([]);
+      setCartId(null);
+    } catch (err) {
+      console.error("Clear cart error:", err);
+    }
   };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-}
-
-export function useCart() {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used inside CartProvider");
-  }
-  return context;
-}
+  return (
+    <CartContext.Provider
+      value={{
+        items,
+        subtotal,       
+        totalEmission,   
+        cartId,
+        loading,
+        fetchCart,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
+};

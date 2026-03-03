@@ -9,6 +9,8 @@ import ProductCatalog from "./components/ProductCatalog";
 import ProductDetail from "./components/ProductDetail";
 import CartPage from "./components/CartPage";
 import CheckoutPage from "./components/CheckoutPage";
+import MyOrders from "./components/MyOrders";
+import PaymentDemo from "./components/PaymentDemo";
 import Footer from "./components/Footer";
 
 import { isAuthenticated, getStoredUser, logout } from "./services/authService";
@@ -43,14 +45,8 @@ function App() {
     checkAuth();
   }, []);
 
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
-  };
-
-  const handleSignupSuccess = (userData) => {
-    setUser(userData);
-  };
-
+  const handleLoginSuccess = (userData) => setUser(userData);
+  const handleSignupSuccess = (userData) => setUser(userData);
   const handleLogout = () => {
     logout();
     setUser(null);
@@ -63,88 +59,99 @@ function App() {
       <CartProvider>
         <BrowserRouter>
           <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/login"
-            element={
-              user ? (
-                <Navigate to="/dashboard" />
-              ) : (
-                <Login onLoginSuccess={handleLoginSuccess} />
-              )
-            }
-          />
+            {/* Public Routes */}
+            <Route
+              path="/login"
+              element={
+                user ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Login onLoginSuccess={handleLoginSuccess} />
+                )
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                user ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Signup onSignupSuccess={handleSignupSuccess} />
+                )
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={user ? <Navigate to="/dashboard" replace /> : <ForgotPassword />}
+            />
 
-          <Route
-            path="/signup"
-            element={
-              user ? (
-                <Navigate to="/dashboard" />
-              ) : (
-                <Signup onSignupSuccess={handleSignupSuccess} />
-              )
-            }
-          />
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute user={user}>
+                  <Dashboard user={user} onLogout={handleLogout} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <ProtectedRoute user={user}>
+                  <ProductCatalog />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products/:id"
+              element={
+                <ProtectedRoute user={user}>
+                  <ProductDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute user={user}>
+                  <CartPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute user={user}>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-orders"
+              element={
+                <ProtectedRoute user={user}>
+                  <MyOrders />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/forgot-password"
-            element={user ? <Navigate to="/dashboard" /> : <ForgotPassword />}
-          />
+            {/* Payment Demo for UPI/Card */}
+            <Route
+              path="/payment-demo"
+              element={
+                <ProtectedRoute user={user}>
+                  <PaymentDemo />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* User Dashboard */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute user={user}>
-                <Dashboard user={user} onLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Product List */}
-          <Route
-            path="/products"
-            element={
-              <ProtectedRoute user={user}>
-                <ProductCatalog />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Product Details */}
-          <Route
-            path="/products/:id"
-            element={
-              <ProtectedRoute user={user}>
-                <ProductDetail />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Smart Cart + Checkout */}
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute user={user}>
-                <CartPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/checkout"
-            element={
-              <ProtectedRoute user={user}>
-                <CheckoutPage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Default Redirect */}
-          <Route
-            path="*"
-            element={<Navigate to={user ? "/dashboard" : "/login"} />}
-          />
+            {/* Default Redirect */}
+            <Route
+              path="*"
+              element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
+            />
           </Routes>
+
           <Footer />
         </BrowserRouter>
       </CartProvider>

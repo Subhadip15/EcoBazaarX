@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { logout, getStoredUser } from "../services/authService";
 import "../styles/Dashboard.css";
@@ -7,7 +8,7 @@ import "../styles/Dashboard.css";
 function Dashboard({ onLogout }) {
   const navigate = useNavigate();
   const user = getStoredUser();
-  const { totalItems } = useCart();
+  const { totalItems, items =[] } = useCart();
   const [showProfile, setShowProfile] = useState(false);
 
   const handleLogout = () => {
@@ -45,6 +46,11 @@ function Dashboard({ onLogout }) {
                 <p><strong>Email:</strong> {user?.email || "-"}</p>
                 <p><strong>Phone:</strong> {user?.phone || "-"}</p>
                 <p><strong>Role:</strong> {user?.role || "USER"}</p>
+                 <hr />
+
+    <Link to="/my-orders" className="dropdown-link">
+      My Orders
+    </Link>
                 <button onClick={handleLogout}>Logout</button>
               </div>
             )}
@@ -94,7 +100,7 @@ function Dashboard({ onLogout }) {
               className="open-catalog-btn secondary"
               onClick={() => navigate("/cart")}
             >
-              Smart Cart ({totalItems})
+              Smart Cart ({items.length})
             </button>
           </div>
         </div>

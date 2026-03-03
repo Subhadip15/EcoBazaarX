@@ -1,0 +1,75 @@
+/* MyOrders.css */
+.orders-container {
+  background-color: #f1f3f6; /* Flipkart's signature light gray background */
+  min-height: 100vh;
+  padding-bottom: 30px;
+}
+
+.orders-content {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+
+.order-card {
+  background: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+.order-header h3 {
+  font-size: 16px;
+  color: #212121;
+  margin: 0;
+}
+
+.status-badge {
+  font-size: 14px;
+  font-weight: 600;
+  color: #26a541; /* Success Green */
+  text-transform: capitalize;
+}
+
+/* Item styling */
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.item-info {
+  font-size: 14px;
+  color: #212121;
+}
+
+.item-price {
+  font-weight: 600;
+  color: #212121;
+}
+
+/* Empty/Loading States */
+.state-message {
+  text-align: center;
+  padding: 50px;
+  color: #878787;
+  font-size: 18px;
+}

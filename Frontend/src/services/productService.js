@@ -1,22 +1,28 @@
 import axios from "axios";
 import { API_BASE_URL } from "../config/api";
 
-/* ================= API CONFIG ================= */
+/* ================= AXIOS INSTANCE ================= */
 
-const PRODUCT_API_URL = `${API_BASE_URL}/api`;
+const api = axios.create({
+  baseURL: `${API_BASE_URL}/api`,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-/* ================= AUTH HEADERS ================= */
+/* ================= REQUEST INTERCEPTOR ================= */
+// Automatically attach token to every request
 
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-
-  return {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` })
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-  };
-}
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 /* ================= ERROR HANDLER ================= */
 
@@ -52,7 +58,7 @@ function handleError(error, fallbackMessage) {
 
 export async function getProducts() {
   try {
-    const res = await axios.get(`${PRODUCT_API_URL}/products`);
+    const res = await api.get("/products");
     return Array.isArray(res.data) ? res.data : [];
   } catch (error) {
     handleError(error, "Failed to load products");
@@ -63,7 +69,7 @@ export async function getProducts() {
 
 export async function getProductById(id) {
   try {
-    const res = await axios.get(`${PRODUCT_API_URL}/product/${id}`);
+    const res = await api.get(`/product/${id}`);
     return res.data;
   } catch (error) {
     handleError(error, "Product not found");
@@ -74,11 +80,7 @@ export async function getProductById(id) {
 
 export async function createProduct(productData) {
   try {
-    const res = await axios.post(
-      `${PRODUCT_API_URL}/product`,
-      productData,
-      getAuthHeaders()
-    );
+    const res = await api.post("/product", productData);
     return res.data;
   } catch (error) {
     handleError(error, "Failed to create product");
@@ -89,11 +91,7 @@ export async function createProduct(productData) {
 
 export async function updateProduct(id, productData) {
   try {
-    const res = await axios.put(
-      `${PRODUCT_API_URL}/product/${id}`,
-      productData,
-      getAuthHeaders()
-    );
+    const res = await api.put(`/product/${id}`, productData);
     return res.data;
   } catch (error) {
     handleError(error, "Failed to update product");
@@ -104,10 +102,7 @@ export async function updateProduct(id, productData) {
 
 export async function deleteProduct(id) {
   try {
-    const res = await axios.delete(
-      `${PRODUCT_API_URL}/product/${id}`,
-      getAuthHeaders()
-    );
+    const res = await api.delete(`/product/${id}`);
     return res.data;
   } catch (error) {
     handleError(error, "Failed to delete product");
@@ -118,10 +113,10 @@ export async function deleteProduct(id) {
 
 export async function searchProducts(keyword) {
   try {
-    const res = await axios.get(`${PRODUCT_API_URL}/products/search`, {
-      params: { keyword }
+    const res = await api.get("/products/search", {
+      params: { keyword },
     });
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   } catch (error) {
     handleError(error, "Search failed");
   }

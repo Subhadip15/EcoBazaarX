@@ -1,10 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
+
 import { useCart } from "../context/CartContext";
 import "../styles/MainNavbar.css";
 
 function MainNavbar() {
   const location = useLocation();
-  const { totalItems } = useCart();
+  const { totalItems,
+          items =[],
+   } = useCart();
 
   const isActive = path => location.pathname === path;
 
@@ -22,7 +25,7 @@ function MainNavbar() {
             Catalog
           </Link>
           <Link className={isActive("/cart") ? "active" : ""} to="/cart">
-            Cart ({totalItems})
+            Cart ({items.length})
           </Link>
           <Link className={isActive("/checkout") ? "active" : ""} to="/checkout">
             Checkout

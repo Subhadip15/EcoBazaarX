@@ -1,98 +1,118 @@
 import { API_BASE_URL } from "../config/api";
 
-const API_URL = `${API_BASE_URL}/user`;
+const API_URL = `${API_BASE_URL}/api/auth`;
 
-const parseErrorResponse = async (response, fallbackMessage) => {
+// ================= SAFE JSON PARSER =================
+const safeJson = async (response) => {
   try {
-    const errorData = await response.json();
-    return errorData.error || fallbackMessage;
+    return await response.json();
   } catch {
-    return fallbackMessage;
+    return null;
   }
 };
 
-// ------------------- SIGNUP
-export const signup = async (userData) => {
+// ================= GENERIC ERROR PARSER =================
+const parseErrorResponse = async (response, fallbackMessage) => {
+  const errorData = await safeJson(response);
+  return errorData?.error || errorData?.message || fallbackMessage;
+};
+
+// ================= GENERIC FETCH WRAPPER =================
+const fetchWithErrorHandling = async (url, options, fallbackMessage) => {
   let response;
+
   try {
-    response = await fetch(`${API_URL}/addUser`, {
+    response = await fetch(url, options);
+  } catch {
+    throw new Error(
+      `Cannot reach backend API at ${API_BASE_URL}. Ensure backend is running and CORS is enabled.`
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response, fallbackMessage));
+  }
+
+  return safeJson(response);
+};
+
+// ================= SIGNUP =================
+export const signup = async (userData) => {
+  const data = await fetchWithErrorHandling(
+    `${API_URL}/signup`,
+    {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
-    });
-  } catch {
-    throw new Error(
-      `Cannot reach backend API at ${API_BASE_URL}. Ensure backend is running and CORS is enabled.`
-    );
+    },
+    "Signup failed"
+  );
+
+  if (!data?.token || !data?.user) {
+    throw new Error("Signup failed: invalid server response");
   }
 
-  if (!response.ok) {
-    throw new Error(await parseErrorResponse(response, "Signup failed"));
-  }
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
 
-  const data = await response.json();
-  const { token, user } = data;
-
-  if (!token || !user) throw new Error("Signup failed");
-
-  // Store JWT token and user info in localStorage
-  localStorage.setItem("token", token);
-  localStorage.setItem("user", JSON.stringify(user));
-
-  return { token, user };
+  return data;
 };
 
-// ------------------- LOGIN
-export const login = async (credentials) => {
-  let response;
-  try {
-    response = await fetch(`${API_URL}/login`, {
+// ================= LOGIN =================
+export const login = async ({ email, password }) => {
+  const data = await fetchWithErrorHandling(
+    `${API_URL}/login`,
+    {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
-  } catch {
-    throw new Error(
-      `Cannot reach backend API at ${API_BASE_URL}. Ensure backend is running and CORS is enabled.`
-    );
+      body: JSON.stringify({ email, password }),
+    },
+    "Invalid email or password"
+  );
+
+  if (!data?.token || !data?.user) {
+    throw new Error("Login failed: invalid server response");
   }
 
-  if (!response.ok) {
-    throw new Error(
-      await parseErrorResponse(response, "Invalid email or password")
-    );
-  }
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
 
-  const data = await response.json();
-  const { token, user } = data;
-
-  if (!token || !user) throw new Error("Login failed");
-
-  // Store JWT token and user info in localStorage
-  localStorage.setItem("token", token);
-  localStorage.setItem("user", JSON.stringify(user));
-
-  return { token, user };
+  return data;
 };
 
-// ------------------- LOGOUT
+// ================= LOGOUT =================
 export const logout = () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
 };
 
-// ------------------- GET STORED USER
+// ================= GET STORED USER =================
 export const getStoredUser = () => {
-  const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
+  try {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+  } catch {
+    return null;
+  }
 };
 
-// ------------------- GET RESOLVED ROLE
+// ================= GET TOKEN =================
+export const getToken = () => {
+  return localStorage.getItem("token");
+};
+
+// ================= AUTH HEADER (IMPORTANT FOR CART / ORDER APIs) =================
+export const getAuthHeader = () => {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// ================= GET USER ROLE =================
 export const getResolvedRole = () => {
   const storedUser = getStoredUser();
   if (storedUser?.role) return String(storedUser.role).toUpperCase();
 
-  const token = localStorage.getItem("token");
+  const token = getToken();
   if (!token) return null;
 
   try {
@@ -103,7 +123,7 @@ export const getResolvedRole = () => {
   }
 };
 
-// ------------------- AUTH CHECK
+// ================= AUTH CHECK =================
 export const isAuthenticated = () => {
-  return Boolean(localStorage.getItem("token"));
+  return Boolean(getToken());
 };

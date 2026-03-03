@@ -1,8 +1,9 @@
+// src/components/CheckoutPage.jsx
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import MainNavbar from "./MainNavbar";
 import { useCart } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
-import MainNavbar from "./MainNavbar";
 import "../styles/CartCheckout.css";
 
 function round(value) {
@@ -12,13 +13,18 @@ function round(value) {
 function CheckoutPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { items, subtotal, totalEmission, clearCart } = useCart();
+  const { items = [], subtotal = 0, totalEmission = 0, clearCart } = useCart() || {};
+
   const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    address: "",
-    paymentMethod: "cod"
-  });
+  fullName: "",
+  email: "",
+  street: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  paymentMethod: "cod",
+});
+
   const [error, setError] = useState("");
   const [processing, setProcessing] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
@@ -26,42 +32,91 @@ function CheckoutPage() {
   const shipping = useMemo(() => (subtotal > 100 ? 0 : 7.5), [subtotal]);
   const total = useMemo(() => round(subtotal + shipping), [subtotal, shipping]);
 
-  const onChange = e => {
+  const onChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
     setError("");
   };
 
-  const onPlaceOrder = e => {
+  const onPlaceOrder = async (e) => {
     e.preventDefault();
-    if (!items.length) {
+
+    if (!(items?.length > 0)) {
       setError("Your cart is empty.");
       showToast("Your cart is empty.", "error");
       return;
     }
-    if (!form.fullName || !form.email || !form.address) {
-      setError("Please complete all checkout fields.");
-      showToast("Please complete all checkout fields.", "error");
-      return;
-    }
+
+   // Change this line:
+// if (!form.fullName || !form.email || !form.address) {
+
+// To this:
+if (!form.fullName || !form.email || !form.street || !form.city || !form.state || !form.zipCode) {
+  setError("Please complete all checkout fields.");
+  showToast("Please complete all checkout fields.", "error");
+  return;
+}
 
     setProcessing(true);
-    window.setTimeout(() => {
-      const orderId = `ECO-${Date.now().toString().slice(-8)}`;
-      setConfirmation({
-        orderId,
-        customer: form.fullName,
-        email: form.email,
-        total,
-        totalEmission,
-        createdAt: new Date().toLocaleString()
+
+    try {
+     const payload = {
+  fullName: form.fullName,
+  email: form.email,
+  paymentMethod: form.paymentMethod,
+
+  address: {
+    street: form.street,
+    city: form.city,
+    state: form.state,
+    zipCode: form.zipCode,
+  },
+
+  items,
+  subtotal,
+  shipping,
+  total,
+  totalEmission,
+};
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User not authenticated");
+
+      const response = await fetch("http://localhost:8080/api/orders/place", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       });
-      clearCart();
-      showToast("Order placed successfully.", "success");
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Failed to place order");
+      }
+
+      const order = await response.json();
+
+      clearCart?.();
+
+      if (["upi", "card"].includes(form.paymentMethod)) {
+        // Navigate to PaymentDemo with backend order
+        navigate("/payment-demo", { state: { order } });
+      } else {
+        setConfirmation(order);
+        showToast("Order placed successfully.", "success");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError(err.message || "Failed to place order");
+      showToast(err.message || "Failed to place order", "error");
+    } finally {
       setProcessing(false);
-    }, 800);
+    }
   };
 
+  // ======================== Confirmation Screen ========================
   if (confirmation) {
     return (
       <main className="checkout-page">
@@ -70,38 +125,44 @@ function CheckoutPage() {
           <article className="card-panel confirmation-card">
             <p className="hero-kicker">Order Confirmed</p>
             <h1>Thank you for choosing greener shopping.</h1>
+
             <div className="confirm-grid">
               <p>
                 <span>Order ID</span>
-                <strong>{confirmation.orderId}</strong>
+                <strong>{confirmation?.orderId || "-"}</strong>
               </p>
               <p>
                 <span>Customer</span>
-                <strong>{confirmation.customer}</strong>
+                <strong>{form.fullName || "-"}</strong>
               </p>
               <p>
                 <span>Email</span>
-                <strong>{confirmation.email}</strong>
+                <strong>{form.email || "-"}</strong>
               </p>
               <p>
                 <span>Total Paid</span>
-                <strong>${confirmation.total.toFixed(2)}</strong>
-              </p>
-              <p>
-                <span>Estimated CO2</span>
-                <strong>{confirmation.totalEmission.toFixed(2)} kg CO2e</strong>
+                <strong>${confirmation?.total?.toFixed(2) || "0.00"}</strong>
               </p>
               <p>
                 <span>Placed At</span>
-                <strong>{confirmation.createdAt}</strong>
+                <strong>
+                  {confirmation?.createdAt
+                    ? new Date(confirmation.createdAt).toLocaleString()
+                    : "-"}
+                </strong>
+              </p>
+              <p>
+                <span>Status</span>
+                <strong>{confirmation?.status || "-"}</strong>
               </p>
             </div>
+
             <div className="hero-actions">
               <button className="outline-btn" onClick={() => navigate("/products")}>
                 Continue Shopping
               </button>
-              <button className="primary-btn" onClick={() => navigate("/dashboard")}>
-                Back to Dashboard
+              <button className="primary-btn" onClick={() => navigate("/my-orders")}>
+                View My Orders
               </button>
             </div>
           </article>
@@ -110,6 +171,7 @@ function CheckoutPage() {
     );
   }
 
+  // ======================== Checkout Form ========================
   return (
     <main className="checkout-page">
       <MainNavbar />
@@ -119,11 +181,6 @@ function CheckoutPage() {
             <p className="hero-kicker">Smart Checkout</p>
             <h1>Review and Confirm</h1>
             <p>One last check on budget and emissions before placing your order.</p>
-          </div>
-          <div className="hero-actions">
-            <Link className="outline-btn" to="/cart">
-              Back to Cart
-            </Link>
           </div>
         </header>
 
@@ -135,56 +192,83 @@ function CheckoutPage() {
                 Full Name
                 <input
                   name="fullName"
-                  value={form.fullName}
+                  value={form.fullName || ""}
                   onChange={onChange}
                   placeholder="Enter your full name"
                 />
-                <small>Use your legal name for delivery verification.</small>
               </label>
+
               <label>
                 Email
                 <input
                   name="email"
                   type="email"
-                  value={form.email}
+                  value={form.email || ""}
                   onChange={onChange}
                   placeholder="name@example.com"
                 />
-                <small>Order updates will be sent to this email.</small>
               </label>
-              <label>
-                Address
-                <textarea
-                  name="address"
-                  value={form.address}
-                  onChange={onChange}
-                  placeholder="Street, city, and postal code"
-                />
-                <small>Include landmark for faster delivery.</small>
-              </label>
+
+             <label>
+  Street
+  <input
+    name="street"
+    value={form.street}
+    onChange={onChange}
+    placeholder="Street address"
+  />
+</label>
+
+<label>
+  City
+  <input
+    name="city"
+    value={form.city}
+    onChange={onChange}
+    placeholder="City"
+  />
+</label>
+
+<label>
+  State
+  <input
+    name="state"
+    value={form.state}
+    onChange={onChange}
+    placeholder="State"
+  />
+</label>
+
+<label>
+  Zip Code
+  <input
+    name="zipCode"
+    value={form.zipCode}
+    onChange={onChange}
+    placeholder="Postal code"
+  />
+</label>
+
               <label>
                 Payment Method
                 <select
                   name="paymentMethod"
-                  value={form.paymentMethod}
+                  value={form.paymentMethod || "cod"}
                   onChange={onChange}
                 >
-                  <option value="cod">Pay on Delivery (Recommended)</option>
+                  <option value="cod">Pay on Delivery</option>
                   <option value="card">Card Payment (UI only)</option>
                   <option value="upi">UPI (UI only)</option>
                 </select>
               </label>
 
-              {form.paymentMethod === "cod" && (
-                <p className="cod-note">
-                  Pay on Delivery selected: payment is collected at your address after
-                  delivery.
-                </p>
-              )}
-
               {error && <p className="error-line">{error}</p>}
 
-              <button className="primary-btn" disabled={processing || !items.length}>
+              <button
+                type="submit"
+                className="primary-btn"
+                disabled={processing || !(items?.length > 0)}
+              >
                 {processing ? "Placing order..." : "Place Order"}
               </button>
             </form>
@@ -194,11 +278,11 @@ function CheckoutPage() {
             <h2>Order Snapshot</h2>
             <div className="summary-line">
               <span>Items</span>
-              <strong>{items.length}</strong>
+              <strong>{items?.length || 0}</strong>
             </div>
             <div className="summary-line">
               <span>Subtotal</span>
-              <strong>${subtotal.toFixed(2)}</strong>
+              <strong>${subtotal?.toFixed(2) || "0.00"}</strong>
             </div>
             <div className="summary-line">
               <span>Shipping</span>
@@ -206,15 +290,12 @@ function CheckoutPage() {
             </div>
             <div className="summary-line">
               <span>Total</span>
-              <strong>${total.toFixed(2)}</strong>
+              <strong>${total?.toFixed(2) || "0.00"}</strong>
             </div>
             <div className="summary-line">
               <span>Estimated CO2</span>
-              <strong>{totalEmission.toFixed(2)} kg CO2e</strong>
+              <strong>{totalEmission?.toFixed(2) || "0.00"} kg CO2e</strong>
             </div>
-            <p className="cod-note">
-              Default mode: Pay on Delivery. 
-            </p>
           </aside>
         </section>
       </section>
