@@ -222,9 +222,10 @@
 
 .filters-row {
   display: grid;
-  grid-template-columns: 1.5fr auto auto;
+  grid-template-columns: 1.6fr repeat(5, minmax(130px, 1fr)) auto;
   gap: 10px;
   margin: 12px 0 16px;
+  align-items: center;
 }
 
 .product-grid {

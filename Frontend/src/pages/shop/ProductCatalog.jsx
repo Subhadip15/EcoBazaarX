@@ -1,15 +1,15 @@
 // src/components/ProductCatalog.jsx
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useToast } from "../context/ToastContext";
-import MainNavbar from "./MainNavbar";
+import { useCart } from "../../context/CartContext";
+import { useToast } from "../../context/ToastContext";
+import MainNavbar from "../../components/layout/MainNavbar";
 import {
   getProducts,
   deleteProduct,
-} from "../services/productService";
-import { getResolvedRole } from "../services/authService";
-import "../styles/ProductCatalog.css";
+} from "../../services/productService";
+import { getResolvedRole } from "../../services/authService";
+import "../../styles/ProductCatalog.css";
 
 function ProductCatalog() {
   const navigate = useNavigate();
@@ -23,6 +23,11 @@ function ProductCatalog() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [maxCO2, setMaxCO2] = useState("");
+  const [sortBy, setSortBy] = useState("name-asc");
 
   // ================= LOAD PRODUCTS =================
   const loadProducts = useCallback(async () => {
@@ -73,6 +78,66 @@ function ProductCatalog() {
     return cartItems.find((i) => i.productId === productId)?.quantity || 0;
   };
 
+  const categoryOptions = useMemo(() => {
+    const categories = products
+      .map((p) => p?.category)
+      .filter(Boolean)
+      .map((category) => String(category).trim());
+    return ["ALL", ...new Set(categories)];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    const filtered = products.filter((p) => {
+      const name = String(p?.name || "").toLowerCase();
+      const category = String(p?.category || "").toLowerCase();
+      const seller = String(p?.seller || "").toLowerCase();
+      const price = Number(p?.price || 0);
+      const totalCO2 = Number(p?.carbonData?.totalCO2ePerKg || 0);
+
+      const matchesSearch =
+        !normalizedSearch ||
+        name.includes(normalizedSearch) ||
+        category.includes(normalizedSearch) ||
+        seller.includes(normalizedSearch);
+
+      const matchesCategory =
+        selectedCategory === "ALL" ||
+        String(p?.category || "").toLowerCase() === selectedCategory.toLowerCase();
+
+      const matchesPrice = maxPrice === "" || price <= Number(maxPrice);
+      const matchesCO2 = maxCO2 === "" || totalCO2 <= Number(maxCO2);
+
+      return matchesSearch && matchesCategory && matchesPrice && matchesCO2;
+    });
+
+    return filtered.sort((a, b) => {
+      const priceA = Number(a?.price || 0);
+      const priceB = Number(b?.price || 0);
+      const co2A = Number(a?.carbonData?.totalCO2ePerKg || 0);
+      const co2B = Number(b?.carbonData?.totalCO2ePerKg || 0);
+      const nameA = String(a?.name || "");
+      const nameB = String(b?.name || "");
+
+      switch (sortBy) {
+        case "price-asc":
+          return priceA - priceB;
+        case "price-desc":
+          return priceB - priceA;
+        case "co2-asc":
+          return co2A - co2B;
+        case "co2-desc":
+          return co2B - co2A;
+        case "name-desc":
+          return nameB.localeCompare(nameA);
+        case "name-asc":
+        default:
+          return nameA.localeCompare(nameB);
+      }
+    });
+  }, [maxCO2, maxPrice, products, searchTerm, selectedCategory, sortBy]);
+
   // ================= UI =================
   return (
     <main className="catalog-page">
@@ -95,9 +160,77 @@ function ProductCatalog() {
       {loading ? (
         <p className="loading-text">Loading products...</p>
       ) : (
-        <section className="product-grid">
-          {products.length === 0 && <p>No products available.</p>}
-          {products.map((p) => {
+        <>
+          <section className="filters-row">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name, category, seller"
+              aria-label="Search products"
+            />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              aria-label="Filter by category"
+            >
+              {categoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category === "ALL" ? "All Categories" : category}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Max price"
+              aria-label="Maximum price"
+            />
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={maxCO2}
+              onChange={(e) => setMaxCO2(e.target.value)}
+              placeholder="Max CO2 (kg)"
+              aria-label="Maximum CO2"
+            />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort products"
+            >
+              <option value="name-asc">Sort: Name A-Z</option>
+              <option value="name-desc">Sort: Name Z-A</option>
+              <option value="price-asc">Sort: Price Low-High</option>
+              <option value="price-desc">Sort: Price High-Low</option>
+              <option value="co2-asc">Sort: CO2 Low-High</option>
+              <option value="co2-desc">Sort: CO2 High-Low</option>
+            </select>
+            <button
+              className="text-btn"
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedCategory("ALL");
+                setMaxPrice("");
+                setMaxCO2("");
+                setSortBy("name-asc");
+              }}
+            >
+              Reset
+            </button>
+          </section>
+
+          <section className="product-grid">
+            {products.length === 0 && <p>No products available.</p>}
+            {products.length > 0 && filteredProducts.length === 0 && (
+              <p>No products match the selected filters.</p>
+            )}
+            {filteredProducts.map((p) => {
             const totalCO2 = Number(p?.carbonData?.totalCO2ePerKg || 0);
             const price = Number(p?.price || 0);
             const quantityInCart = getCartQuantity(p.id);
@@ -124,7 +257,7 @@ function ProductCatalog() {
                   </p>
 
                   <div className="stats-row">
-                    <strong>${price.toFixed(2)}</strong>
+                    <strong>₹{price.toFixed(2)}</strong>
                     <span>{totalCO2.toFixed(2)} kg CO2e</span>
                   </div>
 
@@ -190,8 +323,9 @@ function ProductCatalog() {
                 </div>
               </article>
             );
-          })}
-        </section>
+            })}
+          </section>
+        </>
       )}
     </main>
   );

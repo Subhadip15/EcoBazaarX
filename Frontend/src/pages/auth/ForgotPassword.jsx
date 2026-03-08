@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../config/api";
-import "../styles/ForgotPassword.css";
+import { API_BASE_URL } from "../../config/api";
+import "../../styles/ForgotPassword.css";
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ function ForgotPassword() {
     setLoading(true);
     try {
       const res = await fetch(
-        `${API_BASE_URL}/user/forgot?email=${encodeURIComponent(email)}`,
+        `${API_BASE_URL}/api/auth/forgot?email=${encodeURIComponent(email)}`,
         {
           method: "POST",
         }
@@ -73,7 +73,7 @@ function ForgotPassword() {
         newPassword,
       });
 
-      const res = await fetch(`${API_BASE_URL}/user/reset?${params.toString()}`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/reset?${params.toString()}`, {
         method: "POST",
       });
 

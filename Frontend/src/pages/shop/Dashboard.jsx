@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { logout, getStoredUser } from "../services/authService";
-import "../styles/Dashboard.css";
+import { useCart } from "../../context/CartContext";
+import { logout, getStoredUser } from "../../services/authService";
+import "../../styles/Dashboard.css";
 
 function Dashboard({ onLogout }) {
   const navigate = useNavigate();
@@ -102,6 +102,32 @@ function Dashboard({ onLogout }) {
             >
               Smart Cart ({totalItems})
             </button>
+            <button
+              className="open-catalog-btn secondary"
+              onClick={() => navigate("/insights")}
+            >
+              Carbon Insights
+            </button>
+            <button
+              className="open-catalog-btn secondary"
+              onClick={() => navigate("/eco-reports")}
+            >
+              Eco Reports
+            </button>
+            <button
+              className="open-catalog-btn secondary"
+              onClick={() => navigate("/seller-analytics")}
+            >
+              Product Analytics
+            </button>
+            {user?.role === "ADMIN" && (
+              <button
+                className="open-catalog-btn secondary"
+                onClick={() => navigate("/admin/users")}
+              >
+                Admin Module
+              </button>
+            )}
           </div>
         </div>
       </div>

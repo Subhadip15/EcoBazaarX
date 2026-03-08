@@ -37,8 +37,17 @@ public class OrderService {
             throw new RuntimeException("Cart is empty");
         }
 
-        Address addressEntity = addressRepository.findById(request.getAddressId())
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+        String resolvedAddress;
+        if (request.getAddressId() != null) {
+            Address addressEntity = addressRepository.findById(request.getAddressId())
+                    .orElseThrow(() -> new RuntimeException("Address not found"));
+            resolvedAddress = addressEntity.getStreet() + ", " + addressEntity.getCity() + ", " +
+                    addressEntity.getState() + " - " + addressEntity.getZipCode();
+        } else if (request.getAddress() != null && !request.getAddress().isBlank()) {
+            resolvedAddress = request.getAddress().trim();
+        } else {
+            throw new RuntimeException("Address is required");
+        }
 
         double subtotal = 0.0;
         double totalEmission = 0.0;
@@ -76,8 +85,7 @@ public class OrderService {
                 .paymentMethod(request.getPaymentMethod())
                 .customerName(request.getFullName())
                 .email(request.getEmail() != null ? request.getEmail() : user.getEmail())
-                .address(addressEntity.getStreet() + ", " + addressEntity.getCity() + ", " +
-                        addressEntity.getState() + " - " + addressEntity.getZipCode())
+                .address(resolvedAddress)
                 .orderNumber(AppConstants.ORDER_PREFIX + System.currentTimeMillis())
                 .orderItems(orderItems)
                 .build();

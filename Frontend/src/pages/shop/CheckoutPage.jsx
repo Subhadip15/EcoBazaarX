@@ -1,10 +1,11 @@
 // src/components/CheckoutPage.jsx
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MainNavbar from "./MainNavbar";
-import { useCart } from "../context/CartContext";
-import { useToast } from "../context/ToastContext";
-import "../styles/CartCheckout.css";
+import MainNavbar from "../../components/layout/MainNavbar";
+import { useCart } from "../../context/CartContext";
+import { useToast } from "../../context/ToastContext";
+import { placeOrderApi } from "../../services/orderService";
+import "../../styles/CartCheckout.css";
 
 function round(value) {
   return Math.round(value * 100) / 100;
@@ -26,7 +27,7 @@ function CheckoutPage() {
   const [processing, setProcessing] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
 
-  const shipping = useMemo(() => (subtotal > 100 ? 0 : 7.5), [subtotal]);
+  const shipping = useMemo(() => (subtotal > 100 ? 0 :7.5 ), [subtotal]);
   const total = useMemo(() => round(subtotal + shipping), [subtotal, shipping]);
 
   const onChange = (e) => {
@@ -57,32 +58,9 @@ function CheckoutPage() {
         fullName: form.fullName,
         email: form.email,
         address: form.address,
-        paymentMethod: form.paymentMethod,
-        items,
-        subtotal,
-        shipping,
-        total,
-        totalEmission,
+        paymentMethod: String(form.paymentMethod || "cod").toUpperCase(),
       };
-
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("User not authenticated");
-
-      const response = await fetch("http://localhost:8080/api/orders/place", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Failed to place order");
-      }
-
-      const order = await response.json();
+      const order = await placeOrderApi(payload);
 
       clearCart?.();
 
@@ -127,13 +105,13 @@ function CheckoutPage() {
               </p>
               <p>
                 <span>Total Paid</span>
-                <strong>${confirmation?.total?.toFixed(2) || "0.00"}</strong>
+                <strong>₹{confirmation?.totalAmount?.toFixed(2) || "0.00"}</strong>
               </p>
               <p>
                 <span>Placed At</span>
                 <strong>
-                  {confirmation?.createdAt
-                    ? new Date(confirmation.createdAt).toLocaleString()
+                  {confirmation?.orderDate
+                    ? new Date(confirmation.orderDate).toLocaleString()
                     : "-"}
                 </strong>
               </p>
@@ -238,15 +216,15 @@ function CheckoutPage() {
             </div>
             <div className="summary-line">
               <span>Subtotal</span>
-              <strong>${subtotal?.toFixed(2) || "0.00"}</strong>
+              <strong>₹{subtotal?.toFixed(2) || "0.00"}</strong>
             </div>
             <div className="summary-line">
               <span>Shipping</span>
-              <strong>{shipping ? `$${shipping.toFixed(2)}` : "Free"}</strong>
+              <strong>{shipping ? `₹${shipping.toFixed(2)}` : "Free"}</strong>
             </div>
             <div className="summary-line">
               <span>Total</span>
-              <strong>${total?.toFixed(2) || "0.00"}</strong>
+              <strong>₹{total?.toFixed(2) || "0.00"}</strong>
             </div>
             <div className="summary-line">
               <span>Estimated CO2</span>

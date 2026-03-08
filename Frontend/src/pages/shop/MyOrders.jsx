@@ -1,13 +1,28 @@
 import { useEffect, useState } from "react";
-import MainNavbar from "./MainNavbar";
-import "../styles/MyOrders.css";
+import MainNavbar from "../../components/layout/MainNavbar";
+import { fetchOrdersApi } from "../../services/orderService";
+import "../../styles/MyOrders.css";
 
 function MyOrders() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("orders")) || [];
-    setOrders(stored.reverse());
+    let mounted = true;
+
+    fetchOrdersApi()
+      .then((data) => {
+        if (mounted) {
+          const list = Array.isArray(data) ? data : [];
+          setOrders([...list].reverse());
+        }
+      })
+      .catch(() => {
+        if (mounted) setOrders([]);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const getStatusClass = (status) => {
@@ -43,22 +58,19 @@ function MyOrders() {
 
               <div className="order-details">
                 <div className="order-meta">
-                  <p><strong>Placed On:</strong> {order.createdAt}</p>
-                  <p><strong>Payment:</strong> {order.paymentMethod.toUpperCase()}</p>
-                  <p><strong>Total Paid:</strong> ${order.total.toFixed(2)}</p>
-                  <p><strong>Estimated CO2:</strong> {order.totalEmission.toFixed(2)} kg CO2e</p>
+                  <p><strong>Placed On:</strong> {order.orderDate || "-"}</p>
+                  <p><strong>Payment:</strong> {String(order.paymentMethod || "-").toUpperCase()}</p>
+                  <p><strong>Total Paid:</strong> ₹{Number(order.totalAmount || 0).toFixed(2)}</p>
+                  <p><strong>Estimated CO2:</strong> {Number(order.totalEmission || 0).toFixed(2)} kg CO2e</p>
                 </div>
 
                 <div className="order-items">
                   <h4>Items:</h4>
-                  {order.items.map((item) => (
-                    <div key={item.id} className="item-row">
-                      <div className="item-img">
-                        <img src={item.image} alt={item.name} />
-                      </div>
-                      <span className="item-name">{item.name}</span>
+                  {(order.items || []).map((item) => (
+                    <div key={`${item.productId}-${item.productName}`} className="item-row">
+                      <span className="item-name">{item.productName}</span>
                       <span>× {item.quantity}</span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      <span>₹{Number(item.subtotal || 0).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>

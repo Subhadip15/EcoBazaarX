@@ -191,3 +191,96 @@
   text-align: center;
   font-weight: 600;
 }
+
+.emission-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid #dce8df;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.emission-card h3 {
+  margin: 4px 0;
+}
+
+.emission-label {
+  margin: 0;
+  color: #4f5f55;
+  font-size: 13px;
+}
+
+.emission-badge {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.emission-card.low .emission-badge {
+  background: #dff8e8;
+  color: #0f6d3b;
+}
+
+.emission-card.medium .emission-badge {
+  background: #fff1d7;
+  color: #965d06;
+}
+
+.emission-card.high .emission-badge {
+  background: #ffe1df;
+  color: #9f1d1d;
+}
+
+.recommended-section {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.section-head h3 {
+  margin: 0;
+}
+
+.section-head p {
+  margin: 6px 0 14px;
+  color: #617065;
+  font-size: 13px;
+}
+
+.recommendation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.recommendation-card {
+  background: #f6fbf7;
+  border: 1px solid #d6e8db;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.recommendation-card h4 {
+  margin: 0 0 5px;
+  font-size: 14px;
+}
+
+.recommendation-card p {
+  margin: 0 0 10px;
+  color: #627366;
+  font-size: 13px;
+}
+
+.recommend-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}

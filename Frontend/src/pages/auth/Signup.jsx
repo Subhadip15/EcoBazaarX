@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signup } from "../services/authService";
-import "../styles/Signup.css";
+import { signup } from "../../services/authService";
+import "../../styles/Signup.css";
 
 function Signup({ onSignupSuccess }) {
   const navigate = useNavigate();
@@ -12,7 +12,6 @@ function Signup({ onSignupSuccess }) {
     phone: "",
     password: "",
     confirmPassword: "",
-    role: "USER",
   });
 
   const [error, setError] = useState("");
@@ -24,9 +23,9 @@ function Signup({ onSignupSuccess }) {
   };
 
   const validateForm = () => {
-    const { name, email, phone, password, confirmPassword, role } = formData;
+    const { name, email, phone, password, confirmPassword } = formData;
 
-    if (!name || !email || !phone || !password || !role) {
+    if (!name || !email || !phone || !password) {
       setError("Please fill in all required fields");
       return false;
     }
@@ -52,11 +51,6 @@ function Signup({ onSignupSuccess }) {
       return false;
     }
 
-    if (!["USER", "ADMIN"].includes(role)) {
-      setError("Please choose a valid role");
-      return false;
-    }
-
     return true;
   };
 
@@ -69,7 +63,6 @@ function Signup({ onSignupSuccess }) {
     setLoading(true);
     try {
       const { confirmPassword, ...userData } = formData;
-      userData.role = String(userData.role || "USER").toUpperCase();
       const { user } = await signup(userData);
       onSignupSuccess(user);
       navigate("/dashboard"); // ✅ redirect after signup
@@ -99,7 +92,7 @@ function Signup({ onSignupSuccess }) {
 
         <div className="auth-card">
           <h2>Sign Up</h2>
-          <p className="auth-sub">Create your account and choose your role.</p>
+          <p className="auth-sub">Create your account to continue shopping.</p>
 
           <form onSubmit={handleSubmit}>
             {error && <div className="error-message">{error}</div>}
@@ -130,16 +123,6 @@ function Signup({ onSignupSuccess }) {
               onChange={handleChange}
               disabled={loading}
             />
-
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              disabled={loading}
-            >
-              <option value="USER">Sign up as User</option>
-              <option value="ADMIN">Sign up as Admin</option>
-            </select>
 
             <input
               type="password"

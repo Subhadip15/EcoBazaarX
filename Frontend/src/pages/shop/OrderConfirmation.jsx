@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import MainNavbar from "./MainNavbar";
+import MainNavbar from "../../components/layout/MainNavbar";
 
 export default function OrderConfirmation() {
   const navigate = useNavigate();
@@ -17,9 +17,9 @@ export default function OrderConfirmation() {
           <h1>Thank you for choosing greener shopping.</h1>
           <div className="confirm-grid">
             <p><span>Order ID</span><strong>{order.orderId}</strong></p>
-            <p><span>Customer</span><strong>{order.customer}</strong></p>
+            <p><span>Customer</span><strong>{order.customerName}</strong></p>
             <p><span>Email</span><strong>{order.email}</strong></p>
-            <p><span>Total Paid</span><strong>${order.total.toFixed(2)}</strong></p>
+            <p><span>Total Paid</span><strong>₹{Number(order.totalAmount || 0).toFixed(2)}</strong></p>
             <p><span>Status</span><strong>{order.status}</strong></p>
           </div>
           <div className="hero-actions">

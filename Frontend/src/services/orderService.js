@@ -1,8 +1,9 @@
 // src/services/orderService.js
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
 // Base API URL
-const API_URL = "http://localhost:8080/api/orders";
+const API_URL = `${API_BASE_URL}/api/orders`;
 
 // ================= AUTH HEADER =================
 function getAuthHeader() {

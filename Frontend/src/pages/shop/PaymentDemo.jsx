@@ -1,8 +1,9 @@
 // src/components/PaymentDemo.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import MainNavbar from "./MainNavbar";
-import "../styles/PaymentDemo.css";
+import MainNavbar from "../../components/layout/MainNavbar";
+import { API_BASE_URL } from "../../config/api";
+import "../../styles/PaymentDemo.css";
 
 function PaymentDemo() {
   const location = useLocation();
@@ -30,7 +31,7 @@ function PaymentDemo() {
       try {
         // Call backend to update order status
         const response = await fetch(
-          `http://localhost:8080/api/orders/${order.orderId}/pay`,
+          `${API_BASE_URL}/api/orders/${order.orderId}/pay`,
           {
             method: "PATCH",
             headers: {
@@ -70,8 +71,8 @@ function PaymentDemo() {
           {error && <p className="error-line">{error}</p>}
 
           <p><strong>Order ID:</strong> {orderDetails?.orderId}</p>
-          <p><strong>Customer:</strong> {orderDetails?.customer}</p>
-          <p><strong>Amount:</strong> ${orderDetails?.total?.toFixed(2)}</p>
+          <p><strong>Customer:</strong> {orderDetails?.customerName}</p>
+          <p><strong>Amount:</strong> ₹{orderDetails?.totalAmount?.toFixed(2)}</p>
           <p><strong>Payment Method:</strong> {orderDetails?.paymentMethod?.toUpperCase()}</p>
 
           <p className={`status ${status.toLowerCase()}`}>

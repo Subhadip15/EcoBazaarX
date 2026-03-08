@@ -1,11 +1,11 @@
 // src/components/ProductDetail.jsx
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useToast } from "../context/ToastContext";
-import MainNavbar from "./MainNavbar";
-import { getProductById, getProducts } from "../services/productService";
-import "../styles/ProductDetail.css";
+import { useCart } from "../../context/CartContext";
+import { useToast } from "../../context/ToastContext";
+import MainNavbar from "../../components/layout/MainNavbar";
+import { getProductById, getProducts } from "../../services/productService";
+import "../../styles/ProductDetail.css";
 
 function getRating(total) {
   if (total <= 1.5) return { label: "A+", tone: "best" };
@@ -141,7 +141,7 @@ function ProductDetail() {
             </div>
             <p className="subtitle">{product.category || "General"} • {product.seller || "EcoBazaar Seller"}</p>
             <p className="description">{product.description || "No description available."}</p>
-            <p className="price-line">${Number(product.price || 0).toFixed(2)}</p>
+            <p className="price-line">₹{Number(product.price || 0).toFixed(2)}</p>
 
             {productQty > 0 ? (
               <div className="qty-control">

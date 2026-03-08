@@ -28,6 +28,17 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
+    // ================= PAY ORDER =================
+    @PatchMapping("/{orderId}/pay")
+    public ResponseEntity<OrderResponse> payOrder(
+            @PathVariable Long orderId,
+            Principal principal
+    ) {
+        String email = principal.getName();
+        OrderResponse order = orderService.payOrder(orderId, email);
+        return ResponseEntity.ok(order);
+    }
+
     // ================= GET ALL USER ORDERS =================
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getUserOrders(Principal principal) {
