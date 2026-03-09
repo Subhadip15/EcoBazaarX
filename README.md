@@ -122,7 +122,7 @@ npm test
 ## Team Members
 
 - Shashank Purohit (TL)
-- Chandra Mukherjii
-- Shubadeep
+- Chandra Mukherjee
+- Shubadeep Karmakar
 - Harushi
 - Muskan Kawadkar
