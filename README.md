@@ -115,9 +115,11 @@ export const API_BASE_URL = "http://localhost:8080";
 
 ## Team Members
 
-Shashank Purohit(Team Lead)
-Chandra Mukherjee
-Muskan Kawadkar
-Subhadip Karmakar
-Harushi
+**Team**
+- Shashank (TL)
+- Muskan Kawadkar
+- Chandra Mukherjee
+- Shubhadip
+- Harushi
+
 
