@@ -1,0 +1,201 @@
+:root {
+  --primary: #2da65d;
+  --primary-strong: #1a6a41;
+  --text-white: #f7fff9;
+  --overlay-bg: rgba(0, 0, 0, 0.45); /* Darkens bg for text readability */
+}
+
+/* ===============================
+   DASHBOARD CONTAINER
+=================================*/
+.dashboard-container {
+  position: relative;
+  /* Adjust height based on MainNavbar height (70px) */
+  min-height: calc(100vh - 70px); 
+  width: 100%;
+  display: flex;
+  align-items: center; /* Centers content vertically */
+  overflow: hidden;
+}
+
+.background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Essential for responsiveness */
+  z-index: -1;
+  transform: scale(1.02);
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-container:hover .background-image {
+  transform: scale(1.08);
+}
+
+/* Adds a gradient to ensure text is ALWAYS readable regardless of image color */
+.dashboard-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg, 
+    rgba(0, 0, 0, 0.7) 0%, 
+    rgba(0, 0, 0, 0.3) 50%, 
+    transparent 100%
+  );
+  z-index: 0;
+}
+
+/* ===============================
+   CONTENT OVERLAY
+=================================*/
+.content-overlay {
+  position: relative;
+  z-index: 2;
+  padding: clamp(20px, 5vw, 80px);
+  max-width: 800px;
+  color: var(--text-white);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-kicker {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--eco-primary); /* Uses color from your root */
+}
+
+.content-overlay h2 {
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.1;
+  margin: 0 0 20px;
+  font-weight: 800;
+  text-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.content-overlay p {
+  font-size: clamp(16px, 1.2vw, 19px);
+  line-height: 1.6;
+  max-width: 60ch;
+  margin-bottom: 30px;
+  opacity: 0.95;
+}
+
+/* ===============================
+   QUICK STATS (OPTIONAL)
+=================================*/
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.quick-stats div {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 15px;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.quick-stats div:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.quick-stats span {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  color: #a8e6cf;
+}
+
+.quick-stats strong {
+  font-size: 20px;
+  display: block;
+}
+
+/* ===============================
+   ACTIONS / BUTTONS
+=================================*/
+.dashboard-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.open-catalog-btn {
+  background: var(--eco-primary);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(45, 166, 93, 0.3);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.open-catalog-btn:hover {
+  background: var(--eco-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(45, 166, 93, 0.4);
+}
+
+/* ===============================
+   UTILITIES & ANIMATIONS
+=================================*/
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--eco-primary);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===============================
+   MOBILE RESPONSIVENESS
+=================================*/
+@media (max-width: 768px) {
+  .dashboard-container {
+    align-items: flex-start; /* Content starts from top on mobile */
+    padding-top: 40px;
+  }
+  
+  .content-overlay {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .dashboard-actions {
+    justify-content: center;
+  }
+
+  .quick-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}

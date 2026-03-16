@@ -1,0 +1,239 @@
+:root {
+  --text-dark: #1d1d1f;
+  --text-grey: #6e6e73;
+  --accent-blue: #0071e3;
+  --eco-green: #15803d;
+  --border-light: #d2d2d7;
+}
+
+.premium-product-page {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #ffffff;
+  color: var(--text-dark);
+}
+
+.product-viewport {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 60px;
+  padding: 60px 20px;
+}
+
+/* Gallery Section */
+.hero-image {
+  width: 100%;
+  height: 600px;
+  object-fit: contain;
+  background: #fbfbfb;
+  border-radius: 12px;
+}
+
+.trust-signals {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+  justify-content: center;
+  color: var(--text-grey);
+  font-size: 13px;
+}
+
+/* Sidebar Styling */
+.category-crumb {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-grey);
+  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-crumb .back-link {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  color: var(--accent-blue);
+  text-decoration: none;
+  border: 1px solid var(--border-light);
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+}
+
+.category-crumb .back-link:hover {
+  text-decoration: underline;
+  background: #f5f7fb;
+}
+
+.category-crumb .crumb-text {
+  color: var(--text-grey);
+}
+
+.product-title {
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.price-row {
+  margin-bottom: 30px;
+}
+
+.current-price {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.tax-note {
+  display: block;
+  font-size: 12px;
+  color: var(--text-grey);
+  margin-top: 4px;
+}
+
+/* Buy Button & Controls */
+.primary-buy-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.primary-buy-btn:hover {
+  opacity: 0.9;
+}
+
+.wishlist-action {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: #ffffff;
+  color: var(--accent-blue);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wishlist-action.active {
+  color: #ef4444;
+  border-color: #f3c1c1;
+  background: #fff1f2;
+}
+
+.premium-qty-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.premium-qty-selector button {
+  background: none;
+  border: none;
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Sustainability Card */
+.impact-card {
+  margin-top: 40px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.impact-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: var(--eco-green);
+}
+
+.stat-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.progress-container {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--eco-green);
+  border-radius: 3px;
+}
+
+.impact-footer {
+  font-size: 13px;
+  color: var(--text-grey);
+  line-height: 1.4;
+}
+
+/* Specifications */
+.specs-section {
+  background: #f5f5f7;
+  padding: 80px 20px;
+}
+
+.specs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.spec-item {
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 16px;
+}
+
+.spec-item label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-grey);
+  margin-bottom: 4px;
+}
+
+.spec-item span {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .product-viewport {
+    grid-template-columns: 1fr;
+  }
+}
